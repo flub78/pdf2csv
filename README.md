@@ -31,12 +31,48 @@ The vibe coding approach allows for more organic development where the code stru
 
 ## Usage
 
-*(Note: This section will be updated as the script is developed)*
+The main script is `pdf2csv.py` which provides a command-line interface for converting PDF bank statements to CSV files.
 
-1. Ensure `pdftotext` is installed on your Linux system
-2. Place your PDF bank statements in the input directory
-3. Run the conversion script
-4. Find the generated CSV files in the output directory
+### Prerequisites
+
+Ensure `pdftotext` is installed on your Linux system:
+```bash
+# Ubuntu/Debian
+sudo apt-get install poppler-utils
+
+# CentOS/RHEL/Fedora
+sudo yum install poppler-utils
+```
+
+### Basic Usage
+
+```bash
+# Convert a single file
+./pdf2csv.py bank_statement.pdf
+
+# Convert multiple files
+./pdf2csv.py statement1.pdf statement2.pdf statement3.pdf
+
+# Convert all PDF files in current directory
+./pdf2csv.py *.pdf
+
+# Merge multiple files into one CSV
+./pdf2csv.py --merge combined.csv *.pdf
+
+# Get help
+./pdf2csv.py --help
+
+# Check version
+./pdf2csv.py --version
+```
+
+### Output
+
+For each PDF file processed, the script creates:
+- A `.txt` file containing the extracted text
+- A `.csv` file with the converted data
+
+The CSV format includes columns for Date, Description, Amount, and Balance. The parsing logic is designed to be customized based on your specific bank statement format, following the vibe coding approach of iterative refinement.
 
 ## Contributing
 

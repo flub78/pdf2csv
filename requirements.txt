@@ -1,0 +1,10 @@
+# Python requirements for pdf2csv
+# This project primarily relies on system tools (pdftotext)
+# but may require additional packages for CSV processing
+
+# No additional Python packages required for basic functionality
+# The script uses only standard library modules
+
+# Future enhancements might require:
+# pandas>=1.3.0  # For advanced CSV manipulation
+# openpyxl>=3.0.0  # For Excel output support
