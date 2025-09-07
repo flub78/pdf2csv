@@ -15,8 +15,12 @@ class BankTransaction:
     """Represents a single bank transaction."""
     
     date: Optional[datetime] = None
+    value_date: Optional[datetime] = None
     description: str = ""
+    operation_type: str = ""
     amount: Optional[float] = None
+    debit: Optional[float] = None
+    credit: Optional[float] = None
     balance: Optional[float] = None
     reference: str = ""
     category: str = ""
@@ -54,10 +58,12 @@ class BankStatement:
     bank_code: str = ""  # Bank identification code
     account_number: str = ""
     account_holder: str = ""
+    client_name: str = ""
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     opening_balance: Optional[float] = None
     closing_balance: Optional[float] = None
+    final_balance: Optional[float] = None
     transactions: List[BankTransaction] = None
     
     def __post_init__(self):

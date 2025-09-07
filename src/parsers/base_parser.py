@@ -48,8 +48,63 @@ class BaseStatementParser(ABC):
             with open(self.text_file_path, 'r', encoding='utf-8') as f:
                 self.raw_text = f.read()
             self.lines = self.raw_text.split('\n')
+            self.lines = self._filter_ignore_lines(self.lines)
         except Exception as e:
             raise IOError(f"Error reading text file: {e}")
+    
+    def _filter_ignore_lines(self, lines: List[str]) -> List[str]:
+        """Filter out lines that should be ignored during parsing."""
+        ignore_patterns = [
+            r'VOS CONTACTS',
+            r'Votre Banque à Distance',
+            r'Internet\s*:\s*entreprises\.sg\.fr',
+            r'éléphone\s*:\s*\d+',
+            r'Courrier\s*:\s*\d+.*ABBEVILLE',
+            r'AERODROME D ABBEVILLE',
+            r'Service d\'urgence 24 h/24',
+            r'Perte ou vol de vos cartes',
+            r'Pour toute insatisfaction',
+            r'L\'agence\s*:\s*votre premier',
+            r'Le Service Relations Clientèle',
+            r'Le Médiateur\s*:\s*En dernier',
+            r'Société Générale',
+            r'S\.A\. au capital',
+            r'RCS Paris',
+            r'Siège Social',
+            r'bd Haussmann',
+            r'suite >>>',
+            r'RA\d+',
+            r'N° ADEME',
+            r'Opération exonérée',
+            r'Votre compte est éligible',
+            r'Fonds de Garantie',
+            r'SG-SocieteGenerale\.Reclamations@socgen\.com',
+            r'courrier à : Le médiateur CS 151',
+            r'RELEVÉ DE COMPTE',
+            r'COMPTE D\'ADMINISTRATION - en euros',
+            r'n° 30003 02846 00050034631 54',
+            r'du \d{2}/\d{2}/\d{4} au \d{2}/\d{2}/\d{4}',
+            r'envoi n°\d+ Page \d+/\d+',
+            r'Nature de l\'opération',
+            r'^Débit$',
+            r'^Crédit$'
+        ]
+        
+        filtered_lines = []
+        for line in lines:
+            # Stop processing after TOTAUX DES MOUVEMENTS
+            if re.search(r'TOTAUX DES MOUVEMENTS', line, re.IGNORECASE):
+                break
+                
+            should_ignore = False
+            for pattern in ignore_patterns:
+                if re.search(pattern, line, re.IGNORECASE):
+                    should_ignore = True
+                    break
+            if not should_ignore:
+                filtered_lines.append(line)
+        
+        return filtered_lines
     
     @abstractmethod
     def parse(self) -> BankStatement:

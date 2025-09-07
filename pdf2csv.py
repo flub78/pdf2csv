@@ -22,7 +22,8 @@ from typing import List, Optional
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 try:
-    from parsers import GenericTextParser
+    from parsers.base_parser import GenericTextParser
+    from parsers.sg_parser import SocieteGeneraleParser
     from models import BankStatement
 except ImportError as e:
     print(f"Error importing parser modules: {e}")
@@ -95,7 +96,7 @@ class PDF2CSVConverter:
             print(f"Unexpected error converting {pdf_path}: {e}")
             return None
     
-    def process_text_to_csv(self, txt_path: Path) -> Optional[Path]:
+    def _process_text_to_csv(self, txt_path: Path) -> Optional[Path]:
         """
         Process text file and convert to CSV format using structured parser.
         
@@ -112,8 +113,8 @@ class PDF2CSVConverter:
         csv_path = txt_path.with_suffix('.csv')
         
         try:
-            # Use the parser to extract structured data
-            parser = GenericTextParser(str(txt_path))
+            # Detect parser type based on content
+            parser = self._detect_parser(txt_path)
             statement = parser.parse()
             
             # Display extracted information
@@ -122,13 +123,19 @@ class PDF2CSVConverter:
             print(f"  Period: {statement.get_date_range_str()}")
             print(f"  Transactions: {statement.get_transaction_count()}")
             
-            # Write to CSV using the structured data
+            # Write to CSV using the parser's specific format
             with open(csv_path, 'w', newline='', encoding='utf-8') as csv_file:
-                writer = csv.writer(csv_file)
-                
-                # Get CSV data from statement
-                csv_data = statement.to_csv_data()
-                writer.writerows(csv_data)
+                # Use SG parser's specific CSV format if available
+                if hasattr(parser, 'to_csv_format'):
+                    # SG format uses semicolons and forces quotes
+                    writer = csv.writer(csv_file, delimiter=';', quoting=csv.QUOTE_ALL)
+                    csv_rows = parser.to_csv_format()
+                    writer.writerows(csv_rows)
+                else:
+                    # Fallback to generic format
+                    writer = csv.writer(csv_file)
+                    csv_data = statement.to_csv_data()
+                    writer.writerows(csv_data)
             
             print(f"Successfully created CSV: {csv_path}")
             return csv_path
@@ -137,6 +144,22 @@ class PDF2CSVConverter:
             print(f"Error processing {txt_path} to CSV: {e}")
             # Fallback to basic text processing
             return self._fallback_text_to_csv(txt_path)
+    
+    def _detect_parser(self, txt_path: Path):
+        """Detect appropriate parser based on text content."""
+        try:
+            with open(txt_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            # Check for Société Générale patterns
+            if 'SG ABBEVILLE' in content or 'Société Générale' in content:
+                return SocieteGeneraleParser(str(txt_path))
+            
+            # Default to generic parser
+            return GenericTextParser(str(txt_path))
+            
+        except Exception:
+            return GenericTextParser(str(txt_path))
     
     def _fallback_text_to_csv(self, txt_path: Path) -> Optional[Path]:
         """
@@ -246,7 +269,7 @@ class PDF2CSVConverter:
                 continue
             
             # Convert text to CSV
-            csv_path = self.process_text_to_csv(txt_path)
+            csv_path = self._process_text_to_csv(txt_path)
             if csv_path is None:
                 continue
             
