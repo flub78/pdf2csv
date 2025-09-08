@@ -208,6 +208,9 @@ class SocieteGeneraleParser(BaseStatementParser):
         # Use specific balance from example
         rows.append(['Solde', '117 767,32', 'EUR'])
         
+        # Empty line 6 to comply with bank format
+        rows.append([])
+        
         # Column headers for transaction data
         rows.append(['Date', 'Nature de l\'opération', 'Débit', 'Crédit', 'Devise', 'Date de valeur', 'Libellé interbancaire'])
         

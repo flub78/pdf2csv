@@ -130,7 +130,15 @@ class PDF2CSVConverter:
                     # SG format uses semicolons and forces quotes
                     writer = csv.writer(csv_file, delimiter=';', quoting=csv.QUOTE_ALL)
                     csv_rows = parser.to_csv_format()
-                    writer.writerows(csv_rows)
+                    
+                    for i, row in enumerate(csv_rows):
+                        # Line 7 (index 6) should not have quotes around column headers
+                        if i == 6:  # Column headers line - bypass CSV utilities
+                            line = ';'.join(row)
+                            csv_file.write(line + '\n')
+                        else:
+                            # Use normal CSV writer for all other lines
+                            writer.writerow(row)
                 else:
                     # Fallback to generic format
                     writer = csv.writer(csv_file)

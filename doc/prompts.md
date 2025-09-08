@@ -58,7 +58,7 @@ The implementation follows vibe coding principles with clean, intuitive code tha
 
 ### 2025-09-03 - Session 3
 #### Prompt:
-I want to keep trace of our whole conversation. Every entry into prompt.md should containt the prompt and your answer.
+I want to keep trace of our whole conversation. Every entry into prompt.md should contain the prompt and your answer.
 
 #### AI Response:
 I updated the `doc/prompts.md` file to include complete traceability by adding both user prompts and AI responses for each interaction. The format now includes:
@@ -81,7 +81,7 @@ This comprehensive documentation supports the vibe coding experimental approach 
 
 ### 2025-09-03 - Session 4
 #### Prompt:
-Create a parser object able to read a text file from pdftotext. Put it into a separate directory. Connect the script to the parser. The parset object will receive the text filename as parmater for the constructor. It needs method to extract informations read in the file, like bank name, banque identification, start_date, end_date as well than a collection of bank statements. The bank statements should be an object too. update prompts.md with this prompt.
+Create a parser object able to read a text file from pdftotext. Put it into a separate directory. Connect the script to the parser. The parser object will receive the text filename as parameter for the constructor. It needs methods to extract informations read in the file, like bank name, banque identification, start_date, end_date as well than a collection of bank statements. The bank statements should be an object too. update prompts.md with this prompt.
 
 #### AI Response:
 I created a comprehensive parser system with proper object-oriented architecture:
@@ -200,7 +200,7 @@ Ths prompt must be applied to all AI prompts in this project.
 
 * Generate clean code.
 * Try to stay minimalistic and do not generate unnecessary code or documentation
-* Generate code easy to understand for a human
+* Generate code easy to understand for a human being
 * Except this one all prompt and they answer must be saved in the prompts.md file
 * Proceed by small incremental steps and stop between them
 
@@ -336,7 +336,7 @@ I analyzed the example files and created a specialized Société Générale pars
 
 ### 2025-09-06 - Session 10
 #### Prompt:
-The generated csv file is incorrect. FIrst let's focus on the extraction and generation of the first five lines: "SG ABBEVILLE LEJEUNE    "
+The generated csv file is incorrect. First let's focus on the extraction and generation of the first five lines: "SG ABBEVILLE LEJEUNE    "
 "FR76 3000 3028 4600 0500 3463 154";"CM"
 "CAV ADMI"
 "Solde au";"02/09/2025"
@@ -440,7 +440,7 @@ I fixed the CSV quoting issue in the SG parser by removing manual quote marks fr
 
 ### 2025-09-06 - Session 13
 #### Prompt:
-You have totally removed the double quotes, it is incorrect, each string shoule be surounded by a single double quote, one and only one double quote
+You have totally removed the double quotes, it is incorrect, each string should be surrounded by a single double quote, one and only one double quote
 
 #### AI Response:
 I fixed the CSV format to properly use single double quotes around each field and semicolon separators:
@@ -499,8 +499,7 @@ Now after the header you should generate the following line into the csv file: D
 I added the column header line to the SG parser's CSV output format:
 
 **Column Header Addition:**
-- Added transaction header row after the 5 bank information lines
-- Headers: `Date`, `Nature de l'opération`, `Débit`, `Crédit`, `Devise`, `Date de valeur`, `Libellé interbancaire`
+- Added transaction header row with: `Date`, `Nature de l'opération`, `Débit`, `Crédit`, `Devise`, `Date de valeur`, `Libellé interbancaire`
 - Maintains proper CSV format with semicolon separators and quotes
 
 **CSV Structure Now Complete:**
@@ -688,3 +687,66 @@ I enhanced the amount parsing and CSV formatting to correctly extract and displa
 - Negative signs only on debit amounts for clarity
 - All transaction amounts now properly captured and formatted
 - No more empty amount fields in main transaction rows
+
+---
+
+### 2025-09-08 - Session 20
+#### Prompt:
+To be compliant with the format used by the bank, the line 6 of the generated csv must be empty
+
+#### AI Response:
+I modified the CSV generation to ensure line 6 is empty for bank format compliance:
+
+**Change Made:**
+- Added an empty row after the balance information (line 5) and before the column headers
+- Modified `to_csv_format()` method in `sg_parser.py`
+- Inserted `rows.append([])` to create the required empty line 6
+
+**CSV Structure Now:**
+1. Bank name: `"SG ABBEVILLE LEJEUNE"`
+2. Account info: `"FR76 3000 3028 4600 0500 3463 154";"CM"`
+3. Account type: `"CAV ADMI"`
+4. Balance date: `"Solde au";"02/09/2025"`
+5. Balance amount: `"Solde";"117 767,32";"EUR"`
+6. **Empty line** (new requirement)
+7. Column headers: `"Date";"Nature de l'opération";"Débit";"Crédit";"Devise";"Date de valeur";"Libellé interbancaire"`
+
+**Testing Results:**
+- Line 6 now appears as empty line in CSV output
+- All other formatting remains unchanged
+- Bank format compliance achieved
+
+---
+
+### 2025-09-08 - Session 21
+#### Prompt:
+To be fully compliant with the bank format remove double quotes in generated csv around the column names on line 7. The output should be Date;Nature de l'opération;Débit;Crédit;Devise;Date de valeur;Libellé interbancaire with no double quotes
+
+#### AI Response:
+I modified the CSV writing logic to remove quotes only from line 7 (column headers) while keeping quotes on all other lines:
+
+**Solution Implemented:**
+- Reverted to using `csv.QUOTE_ALL` for all lines except line 7
+- Added special handling for line 7 by bypassing CSV utilities
+- Used direct string joining with semicolons for column headers only
+
+**Code Changes:**
+```python
+for i, row in enumerate(csv_rows):
+    if i == 6:  # Column headers line - bypass CSV utilities
+        line = ';'.join(row)
+        csv_file.write(line + '\n')
+    else:
+        # Use normal CSV writer for all other lines
+        writer.writerow(row)
+```
+
+**Final Output:**
+- Line 7: `Date;Nature de l'opération;Débit;Crédit;Devise;Date de valeur;Libellé interbancaire` (no quotes)
+- All other lines: Properly quoted using `csv.QUOTE_ALL`
+- Bank format compliance fully achieved
+
+**Benefits:**
+- Clean, minimal solution treating line 7 as special case
+- Maintains proper quoting for all data that needs it
+- Compliant with bank format requirements
