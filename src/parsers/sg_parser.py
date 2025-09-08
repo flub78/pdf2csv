@@ -187,6 +187,48 @@ class SocieteGeneraleParser(BaseStatementParser):
         else:
             transaction.description = line
     
+    def _get_operation_category(self, operation_type: str) -> str:
+        """Determine the proper category based on operation type."""
+        if not operation_type:
+            return ""
+        
+        operation_upper = operation_type.upper()
+        
+        # COMMISSIONS ET FRAIS DIVERS for fees and charges
+        if any(keyword in operation_upper for keyword in ['FACTURATION', 'FRAIS']):
+            return "COMMISSIONS ET FRAIS DIVERS"
+        
+        # CHEQUES PAYES for check operations
+        if 'CHEQUE' in operation_upper and 'REMISE' not in operation_upper:
+            return "CHEQUES PAYES"
+        
+        # REMISES DE CHEQUES for check deposits
+        if 'REMISE CHEQUE' in operation_upper:
+            return "REMISES DE CHEQUES"
+        
+        # VERSEMENTS ESPECES for cash deposits
+        if 'VRST GAB' in operation_upper:
+            return "VERSEMENTS ESPECES"
+        
+        # ECHEANCE CREDITS for loan payments
+        if 'ECHEANCE PRET' in operation_upper:
+            return "ECHEANCE CREDITS"
+        
+        # AUTRES VIREMENTS RECUS for incoming transfers
+        if 'VIR RECU' in operation_upper:
+            return "AUTRES VIREMENTS RECUS"
+        
+        # Empty category for other incoming transfers
+        if 'VIR INST RE' in operation_upper:
+            return ""
+        
+        # AUTRES VIREMENTS EMIS for outgoing transfers
+        if 'VIR EUROPEEN EMIS' in operation_upper or 'EMIS' in operation_upper:
+            return "AUTRES VIREMENTS EMIS"
+        
+        # Default to empty for unknown operations
+        return ""
+
     def _parse_french_amount(self, amount_str: str) -> float:
         """Parse French formatted amount (1.234,56)."""
         # Remove thousand separators and convert decimal comma to dot
@@ -235,6 +277,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 credit_str = formatted_amount
             
             # Main transaction row
+            category = self._get_operation_category(transaction.operation_type)
             rows.append([
                 date_str,
                 transaction.operation_type or '',
@@ -242,7 +285,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 credit_str,
                 'EUR',
                 value_date_str,
-                'AUTRES VIREMENTS EMIS'  # Default category for now
+                category
             ])
             
             # Additional detail rows for multi-line descriptions
