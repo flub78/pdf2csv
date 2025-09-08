@@ -108,8 +108,33 @@ class SocieteGeneraleParser(BaseStatementParser):
                 
                 # Extract operation type and amounts from this line and following lines
                 remaining_text = date_match.group(3)
-                current_transaction.operation_type = remaining_text.strip()
+                
+                # Extract amount from the operation text if present
+                amount_in_operation = None
+                operation_text = remaining_text
+                
+                # Look for amount pattern at the end of the operation text
+                amount_match = re.search(r'(\d{1,3}(?:\.\d{3})*,\d{2})\s*\*?\s*$', remaining_text)
+                if amount_match:
+                    amount_in_operation = self._parse_french_amount(amount_match.group(1))
+                    # Remove the amount from the operation text
+                    operation_text = remaining_text[:amount_match.start()].strip()
+                
+                current_transaction.operation_type = self._clean_text(operation_text)
                 current_transaction.detail_lines = []
+                
+                # Set the amount if found in operation text
+                if amount_in_operation:
+                    # Determine if this is debit or credit based on operation type
+                    operation_upper = operation_text.upper()
+                    is_credit_operation = any(keyword in operation_upper for keyword in [
+                        'VIR INST RE', 'VIR RECU', 'REMISE', 'DEPOT', 'VRST GAB'
+                    ])
+                    
+                    if is_credit_operation:
+                        current_transaction.credit = amount_in_operation
+                    else:
+                        current_transaction.debit = amount_in_operation
                 
                 # Parse amounts and detail lines following this transaction
                 i = self._parse_transaction_details(current_transaction, i, lines)
@@ -152,12 +177,13 @@ class SocieteGeneraleParser(BaseStatementParser):
                         continue
                 
                 # It's a detail line
-                detail_lines.append(line)
+                detail_lines.append(self._clean_text(line))
             
             i += 1
         
         # Set amounts based on what we found and operation type
-        if amounts:
+        # Only set amounts if they weren't already set from the operation text
+        if amounts and not transaction.debit and not transaction.credit:
             # Determine if this is a debit or credit operation based on keywords
             operation_upper = transaction.operation_type.upper()
             is_credit_operation = any(keyword in operation_upper for keyword in [
@@ -242,6 +268,28 @@ class SocieteGeneraleParser(BaseStatementParser):
         
         # Default to empty for unknown operations
         return ""
+
+    def _clean_text(self, text: str) -> str:
+        """Clean text by removing extra spaces, line breaks, and non-printable characters."""
+        if not text:
+            return text
+        
+        import re
+        
+        # Remove non-printable characters (keep only printable ASCII and common accented characters)
+        # Keep space (32), printable ASCII (33-126), and common extended ASCII for French (128-255)
+        cleaned = ''.join(char for char in text if ord(char) == 32 or (33 <= ord(char) <= 126) or (128 <= ord(char) <= 255))
+        
+        # Replace line breaks with spaces
+        cleaned = re.sub(r'[\r\n]+', ' ', cleaned)
+        
+        # Replace multiple spaces with single spaces
+        cleaned = re.sub(r' +', ' ', cleaned)
+        
+        # Strip leading and trailing spaces
+        cleaned = cleaned.strip()
+        
+        return cleaned
 
     def _parse_french_amount(self, amount_str: str) -> float:
         """Parse French formatted amount (1.234,56)."""

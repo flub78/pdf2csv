@@ -77,7 +77,7 @@ class PDF2CSVConverter:
         
         try:
             # Run pdftotext command
-            cmd = ['pdftotext', str(pdf_path), str(txt_path)]
+            cmd = ['pdftotext', '-layout', str(pdf_path), str(txt_path)]
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             
             if txt_path.exists():
