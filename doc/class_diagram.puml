@@ -1,0 +1,201 @@
+@startuml pdf2csv_class_diagram
+!theme toy
+title PDF2CSV - Class Diagram
+skinparam backgroundColor #F8F9FA
+skinparam titleFontSize 18
+skinparam titleFontColor #2E3440
+
+' Color scheme
+skinparam class {
+    BackgroundColor<<datamodel>> #E3F2FD
+    BorderColor<<datamodel>> #1976D2
+    FontColor<<datamodel>> #0D47A1
+    
+    BackgroundColor<<parser>> #F3E5F5
+    BorderColor<<parser>> #7B1FA2
+    FontColor<<parser>> #4A148C
+    
+    BackgroundColor<<application>> #E8F5E8
+    BorderColor<<application>> #388E3C
+    FontColor<<application>> #1B5E20
+    
+    BackgroundColor<<external>> #FFF3E0
+    BorderColor<<external>> #F57C00
+    FontColor<<external>> #E65100
+}
+
+package "Data Models" <<Rectangle>> {
+    class BankTransaction <<datamodel>> {
+        +date: Optional[datetime]
+        +value_date: Optional[datetime]
+        +description: str
+        +operation_type: str
+        +amount: Optional[float]
+        +debit: Optional[float]
+        +credit: Optional[float]
+        +balance: Optional[float]
+        +reference: str
+        +category: str
+        +detail_lines: List[str]
+        ====
+        +__str__(): str
+        +to_csv_row(): List[str]
+        +csv_header(): List[str]
+    }
+
+    class BankStatement <<datamodel>> {
+        +bank_name: str
+        +bank_code: str
+        +account_number: str
+        +account_holder: str
+        +client_name: str
+        +start_date: Optional[datetime]
+        +end_date: Optional[datetime]
+        +opening_balance: Optional[float]
+        +closing_balance: Optional[float]
+        +final_balance: Optional[float]
+        +transactions: List[BankTransaction]
+        ====
+        +add_transaction(transaction: BankTransaction)
+        +get_transaction_count(): int
+        +get_date_range_str(): str
+        +to_csv_data(): List[List[str]]
+        +__str__(): str
+    }
+}
+
+package "Parser System" <<Rectangle>> {
+    abstract class BaseStatementParser <<parser>> {
+        +text_file_path: Path
+        +raw_text: str
+        +lines: List[str]
+        +statement: BankStatement
+        ====
+        +__init__(text_file_path: str)
+        #{abstract} _load_text(): void
+        #{abstract} _filter_ignore_lines(lines: List[str]): List[str]
+        +{abstract} parse(): BankStatement
+        +get_bank_name(): str
+        +get_bank_identification(): str
+        +get_start_date(): Optional[datetime]
+        +get_end_date(): Optional[datetime]
+        +get_transactions(): List[BankTransaction]
+        +get_statement(): BankStatement
+    }
+
+    class GenericTextParser <<parser>> {
+        +date_patterns: List[str]
+        +amount_patterns: List[str]
+        +bank_patterns: List[str]
+        ====
+        +parse(): BankStatement
+        #_extract_bank_info(): void
+        #_extract_dates(): void
+        #_extract_transactions(): void
+        #_parse_date(date_str: str): Optional[datetime]
+        #_extract_amounts(line: str): List[float]
+        #_clean_description(line: str): str
+    }
+
+    class SocieteGeneraleParser <<parser>> {
+        +account_pattern: str
+        +period_pattern: str
+        +client_pattern: str
+        +transaction_pattern: str
+        +amount_pattern: str
+        +balance_pattern: str
+        ====
+        +parse(): BankStatement
+        +to_csv_format(): List[List[str]]
+        #_extract_bank_info(): void
+        #_extract_account_info(): void
+        #_extract_period(): void
+        #_extract_transactions(): void
+        #_parse_transaction_details(): int
+        #_get_operation_category(operation_type: str): str
+        #_parse_french_amount(amount_str: str): float
+        #_clean_text(text: str): str
+    }
+}
+
+package "Main Application" <<Rectangle>> {
+    class PDF2CSVConverter <<application>> {
+        +merge_output: Optional[str]
+        +processed_files: List[str]
+        ====
+        +__init__(merge_output: Optional[str])
+        +check_pdftotext_available(): bool
+        +convert_pdf_to_text(pdf_path: Path): Optional[Path]
+        +process_files(pdf_files: List[str]): bool
+        #_process_text_to_csv(txt_path: Path): Optional[Path]
+        #_detect_parser(txt_path: Path): BaseStatementParser
+        #_fallback_text_to_csv(txt_path: Path): Optional[Path]
+        +merge_csv_files(csv_files: List[Path], output_path: Path): bool
+    }
+}
+
+package "External Dependencies" <<Rectangle>> {
+    class pdftotext <<external>> {
+        ====
+        +extract_text_from_pdf()
+    }
+    
+    class "Python Standard Library" <<external>> {
+        ====
+        +argparse
+        +csv
+        +subprocess
+        +pathlib
+        +datetime
+        +re
+        +dataclasses
+    }
+}
+
+' Relationships with styling
+BankStatement ||--o{ BankTransaction : "contains"
+BaseStatementParser ||-- BankStatement : "creates"
+BaseStatementParser <|-- GenericTextParser : "extends"
+BaseStatementParser <|-- SocieteGeneraleParser : "extends"
+
+PDF2CSVConverter ..> BaseStatementParser : "uses"
+PDF2CSVConverter ..> GenericTextParser : "creates"
+PDF2CSVConverter ..> SocieteGeneraleParser : "creates"
+PDF2CSVConverter ..> pdftotext : "calls"
+
+SocieteGeneraleParser ..> BankTransaction : "creates"
+GenericTextParser ..> BankTransaction : "creates"
+
+' Enhanced Notes with styling
+note right of SocieteGeneraleParser #FFEB3B
+  <b>Specialized Parser</b>
+  French banking format with:
+  • French number formatting
+  • 7 operation categories  
+  • Text cleaning algorithms
+  • Cheque number processing
+end note
+
+note bottom of BankTransaction #E8F5E8
+  <b>Flexible Data Model</b>
+  Uses dataclass with optional
+  fields for compatibility across
+  different bank formats
+end note
+
+note top of PDF2CSVConverter #FFF3E0
+  <b>Main Orchestrator</b>
+  <color:red>1.</color> PDF → Text (pdftotext)
+  <color:purple>2.</color> Text → Parser detection  
+  <color:blue>3.</color> Parser → BankStatement
+  <color:green>4.</color> BankStatement → CSV
+end note
+
+note left of BaseStatementParser #F3E5F5
+  <b>Abstract Base</b>
+  Provides common parsing
+  infrastructure and text
+  filtering capabilities
+end note
+
+@enduml
