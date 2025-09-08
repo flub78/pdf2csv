@@ -87,7 +87,10 @@ class BaseStatementParser(ABC):
             r'envoi n°\d+ Page \d+/\d+',
             r'Nature de l\'opération',
             r'^Débit$',
-            r'^Crédit$'
+            r'^Crédit$',
+            r'^Valeur$',
+            r'^Date$',
+            r'^eur$'
         ]
         
         filtered_lines = []

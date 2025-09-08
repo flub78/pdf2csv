@@ -859,3 +859,35 @@ I enhanced the categorization logic in the SG parser to include comprehensive ca
 - Easy to extend for additional operation types
 - Proper order of precedence (specific patterns checked before general ones)
 - Maintains backward compatibility with existing functionality
+---
+
+### 2025-09-08 - Session 25
+#### Prompt:
+The lines that only contain
+Valeur
+Date
+should be skipped in the input text file
+
+#### AI Response:
+I enhanced the line filtering in the base parser to skip standalone "Valeur" and "Date" lines that appear as column headers between pages in the bank statement:
+
+**Filter Enhancement:**
+- Added `r'^Valeur$'` pattern to ignore standalone "Valeur" lines
+- Added `r'^Date$'` pattern to ignore standalone "Date" lines  
+- These patterns use `^` and `$` anchors to match only lines containing exactly these words
+
+**Problem Addressed:**
+- Standalone "Valeur" and "Date" lines were being incorrectly included as transaction detail lines
+- These lines appear as column headers scattered throughout the multi-page PDF text
+- They were showing up as empty detail rows in the CSV output
+
+**Testing Results:**
+- CSV line count reduced from previous count, indicating successful filtering
+- No more standalone "Date" or "Valeur" lines appear in transaction details
+- Transaction parsing remains clean and accurate
+- All legitimate transaction content preserved
+
+**Code Quality:**
+- Minimal change using existing filtering infrastructure
+- Proper regex patterns with anchors for exact matching
+- Maintains existing filter logic and performance
