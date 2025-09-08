@@ -125,6 +125,7 @@ class SocieteGeneraleParser(BaseStatementParser):
         amounts = []
         detail_lines = []
         i = start_index + 1
+        cheque_number = None
         
         while i < len(all_lines):
             line = all_lines[i].strip()
@@ -141,6 +142,15 @@ class SocieteGeneraleParser(BaseStatementParser):
             if amount_match:
                 amounts.append(self._parse_french_amount(amount_match.group(1)))
             else:
+                # For CHEQUE operations, check if this line contains just a number (the cheque number)
+                if 'CHEQUE' in transaction.operation_type.upper() and 'REMISE' not in transaction.operation_type.upper():
+                    # Check if line is just a number (cheque number)
+                    if re.match(r'^\d+$', line):
+                        cheque_number = line
+                        # Skip adding this as a detail line since we'll include it in operation_type
+                        i += 1
+                        continue
+                
                 # It's a detail line
                 detail_lines.append(line)
             
@@ -174,6 +184,10 @@ class SocieteGeneraleParser(BaseStatementParser):
                     transaction.credit = transaction_amount
                 else:
                     transaction.debit = transaction_amount
+        
+        # For CHEQUE operations, include the cheque number in the operation type
+        if cheque_number and 'CHEQUE' in transaction.operation_type.upper() and 'REMISE' not in transaction.operation_type.upper():
+            transaction.operation_type = f"CHEQUE {cheque_number}"
         
         # Store detail lines for CSV generation
         transaction.detail_lines = detail_lines
