@@ -129,6 +129,7 @@ pdf2csv/
 ### Vibe coding tracing
 - Save every prompt and response during development to track changes and decisions.
 - Prompts and response must be stored in the prompts.md file in the doc/ directory.
+- **AUTOMATIC REQUIREMENT**: Always update doc/prompts.md with each interaction unless explicitly told otherwise.
 
 ### Style Guidelines
 - Generate clean code.

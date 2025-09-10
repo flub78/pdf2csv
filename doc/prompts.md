@@ -2,6 +2,8 @@
 
 This file contains all AI prompts used for this project for further analysis and reference. Each entry includes both the user prompt and the AI response for complete traceability.
 
+**🤖 AI REMINDER: Always update this file with new interactions following the established format**
+
 ---
 
 ### 2025-09-03 - Session 1
@@ -925,3 +927,77 @@ I enhanced the PlantUML class diagram with comprehensive color coding and stylin
 
 **Result:**
 The diagram now provides clear visual cues that help distinguish between different types of components, making the system architecture much more intuitive to understand at a glance. Each package has its own color theme, and the enhanced notes provide structured information about key architectural decisions and workflow steps.
+
+---
+
+### 2025-09-10 - Regex Analysis and Improvement Session
+#### Prompt:
+Review all regular expressions used in this project. Generate a document that contain the regular exprsssion, in what file and line it is declared and what is the purpose of the regular expression. AI generated regular expression tends to be limited to the provided data test and often miss abstraction. The file will be reviewed by a human being and he may have to ask you for some refactoring
+
+#### AI Response:
+I created a comprehensive analysis document `doc/regex_analysis.md` reviewing all 58 regular expressions across 4 files in the project:
+
+**Analysis Scope:**
+- **Text filtering** (33 patterns): Removing unwanted content from bank statements  
+- **Date parsing** (8 patterns): Extracting dates in various formats
+- **Amount parsing** (8 patterns): Extracting monetary amounts
+- **Data extraction** (9 patterns): Extracting account numbers, bank names, transaction data
+
+**Critical Issues Identified:**
+1. **Hardcoded patterns**: Account numbers and client names too specific to test data
+2. **Amount parsing limitations**: `\d{1,3}` restriction failing on large unformatted amounts
+3. **Missing characters**: "Téléphone" pattern missing 'T'
+4. **Mixed decimal separators**: Patterns accepting both comma and dot causing ambiguity
+
+**Files Analyzed:**
+- `src/parsers/base_parser.py`: 33 ignore patterns + generic amount/date patterns
+- `src/parsers/sg_parser.py`: SG-specific patterns for French banking format
+- `src/parsers/specific_parsers.py`: French banking patterns  
+- `generate_comparison.py`: Transaction parsing patterns
+
+#### Follow-up Prompt:
+When I see patterns like : | 164 | `r'([+-]?\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)\s*[\$€£¥]?'` | Amount with suffix currency | ⚠️ Mixed decimal separators |, I am concerned that numerical amount could be limited to a cernain number of digit, and that the parser could fail with bigger ammounts, do you confirm that it is a risk?
+
+#### AI Response:
+**CONFIRMED**: This is a critical risk! The `\d{1,3}` pattern at the beginning restricts the first group of digits to maximum 3 digits, causing failures on:
+
+**Examples that FAIL:**
+- `€ 5000000,00` (5 million unformatted)
+- `$ 25000000.00` (25 million unformatted)  
+- `12345,67` (12K without separators)
+- Corporate accounts with large balances
+- Investment accounts with major sums
+- International wire transfers
+
+**Root Cause:** Pattern assumes thousand separators always present, but many formats write large amounts without separators.
+
+#### Final Prompt:
+The best strategy is to filter out thousand separator and then to be able to support amount up to at least 10 millions. Change the code to make amount regular expressions more robust
+
+#### AI Response & Implementation:
+**Strategy Implemented:**
+- **Multiple specialized patterns** instead of one universal pattern
+- **Support for amounts up to 10+ million** in both formatted and unformatted styles
+- **Format-specific handling** for US vs French number formats
+- **Backward compatibility** maintained
+
+**Files Modified:**
+1. `src/parsers/base_parser.py` - 8 new flexible amount patterns
+2. `src/parsers/specific_parsers.py` - 7 improved French amount patterns  
+3. `src/parsers/sg_parser.py` - Updated SG-specific patterns
+4. `generate_comparison.py` - Fixed comparison script patterns
+5. `doc/regex_analysis.md` - Updated documentation
+
+**New Pattern Categories:**
+- **Formatted amounts**: `1,234,567.89` (US) and `1.234.567,89` (French)
+- **Unformatted large amounts**: `5000000,00` or `25000000.00`
+- **Small amounts**: `123,45` or `123.45`
+- **Currency support**: Prefix/suffix for €, $, £, ¥
+
+**Testing Results:**
+- All previous functionality maintained
+- Large corporate amounts now supported
+- Both US and French formats working
+- CSV generation still produces 176 lines for test data
+
+**Impact:** Corporate banking, large investment accounts, and international transfers now parse correctly while maintaining compatibility with existing smaller transactions.
