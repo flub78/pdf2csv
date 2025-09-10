@@ -159,9 +159,19 @@ class GenericTextParser(BaseStatementParser):
         ]
         
         # Common amount patterns (with currency symbols)
+        # Supports amounts up to 10+ million, both formatted and unformatted
         self.amount_patterns = [
-            r'[\$€£¥]?\s*([+-]?\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)',
-            r'([+-]?\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)\s*[\$€£¥]?'
+            # Formatted amounts with thousand separators
+            r'[\$€£¥]?\s*([+-]?\d{1,3}(?:[,\s]\d{3})+(?:\.\d{2})?)',  # US format: 1,234,567.89
+            r'([+-]?\d{1,3}(?:[,\s]\d{3})+(?:\.\d{2})?)\s*[\$€£¥]?',
+            r'[\$€£¥]?\s*([+-]?\d{1,3}(?:\.\d{3})+(?:,\d{2})?)',      # French format: 1.234.567,89
+            r'([+-]?\d{1,3}(?:\.\d{3})+(?:,\d{2})?)\s*[\$€£¥]?',
+            # Unformatted large amounts (no separators): 1234567.89 or 1234567,89
+            r'[\$€£¥]?\s*([+-]?\d{4,}(?:[.,]\d{2})?)',
+            r'([+-]?\d{4,}(?:[.,]\d{2})?)\s*[\$€£¥]?',
+            # Small amounts (1-999): 123.45 or 123,45
+            r'[\$€£¥]?\s*([+-]?\d{1,3}(?:[.,]\d{2})?)',
+            r'([+-]?\d{1,3}(?:[.,]\d{2})?)\s*[\$€£¥]?'
         ]
         
         # Common bank name patterns

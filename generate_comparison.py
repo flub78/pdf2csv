@@ -51,7 +51,7 @@ def extract_text_transactions(text_file):
             transaction_start = True
         elif transaction_start:
             # Check if this is an amount line (end of transaction)
-            if re.match(r'^\d{1,3}(?:\.\d{3})*,\d{2}$', line):
+            if re.match(r'^(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)$', line):
                 # This is the final amount, transaction ends here
                 current_transaction.append(line)
                 transactions.append(current_transaction[:])

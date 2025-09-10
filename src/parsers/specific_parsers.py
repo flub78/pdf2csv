@@ -41,10 +41,20 @@ class FrenchBankParser(BaseStatementParser):
         ]
         
         # French amount patterns (EUR)
+        # Supports amounts up to 10+ million, both formatted and unformatted
         self.french_amount_patterns = [
-            r'([+-]?\d{1,3}(?:\s\d{3})*(?:,\d{2})?)\s*€',
-            r'([+-]?\d{1,3}(?:\.\d{3})*(?:,\d{2})?)\s*EUR',
-            r'€\s*([+-]?\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)'
+            # Formatted amounts with space separators: 1 234 567,89 €
+            r'([+-]?\d{1,3}(?:\s\d{3})+(?:,\d{2})?)\s*€',
+            # Formatted amounts with dot separators: 1.234.567,89 EUR
+            r'([+-]?\d{1,3}(?:\.\d{3})+(?:,\d{2})?)\s*EUR',
+            # Unformatted large amounts: 1234567,89 €
+            r'([+-]?\d{4,}(?:,\d{2})?)\s*€?',
+            # Small amounts: 123,45 € or 123 €
+            r'([+-]?\d{1,3}(?:,\d{2})?)\s*€',
+            # Euro prefix patterns
+            r'€\s*([+-]?\d{1,3}(?:\s\d{3})+(?:,\d{2})?)',  # € 1 234 567,89
+            r'€\s*([+-]?\d{4,}(?:,\d{2})?)',               # € 1234567,89
+            r'€\s*([+-]?\d{1,3}(?:,\d{2})?)'               # € 123,45
         ]
         
         # French bank name patterns

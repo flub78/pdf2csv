@@ -32,8 +32,10 @@ class SocieteGeneraleParser(BaseStatementParser):
         
         # Transaction patterns
         self.transaction_pattern = r'(\d{2}/\d{2}/\d{4})\s+(\d{2}/\d{2}/\d{4})\s+(.+?)(?:\d+[,\.]\d{2}|\n)'
-        self.amount_pattern = r'(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)'
-        self.balance_pattern = r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+(\d{1,3}(?:\.\d{3})*(?:,\d{2})?)'
+        # French amount pattern - supports up to 10+ million (formatted and unformatted)
+        self.amount_pattern = r'(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)'
+        # Balance pattern - same improvement
+        self.balance_pattern = r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)'
     
     def parse(self) -> BankStatement:
         """Parse Société Générale bank statement."""
@@ -65,7 +67,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 self.statement.bank_code = "CM"
         
         # Extract final balance
-        balance_match = re.search(r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+(\d{1,3}(?:\.\d{3})*,\d{2})', self.raw_text)
+        balance_match = re.search(r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)', self.raw_text)
         if balance_match:
             self.statement.final_balance = self._parse_french_amount(balance_match.group(1))
         else:
@@ -114,7 +116,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 operation_text = remaining_text
                 
                 # Look for amount pattern at the end of the operation text
-                amount_match = re.search(r'(\d{1,3}(?:\.\d{3})*,\d{2})\s*\*?\s*$', remaining_text)
+                amount_match = re.search(r'(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)\s*\*?\s*$', remaining_text)
                 if amount_match:
                     amount_in_operation = self._parse_french_amount(amount_match.group(1))
                     # Remove the amount from the operation text
@@ -163,7 +165,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 break
             
             # Check if it's an amount line (numbers, dots, commas, possibly with *)
-            amount_match = re.match(r'^(\d{1,3}(?:\.\d{3})*,\d{2})\s*\*?$', line)
+            amount_match = re.match(r'^(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)\s*\*?$', line)
             if amount_match:
                 amounts.append(self._parse_french_amount(amount_match.group(1)))
             else:
