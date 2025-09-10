@@ -59,8 +59,8 @@ class BaseStatementParser(ABC):
             r'Votre Banque à Distance',
             r'Internet\s*:\s*entreprises\.sg\.fr',
             r'éléphone\s*:\s*\d+',
-            r'Courrier\s*:\s*\d+.*ABBEVILLE',
-            r'AERODROME D ABBEVILLE',
+            r'Courrier\s*:\s*\d+.*[A-Z\s]+',  # Remove postal addresses
+            r'AERODROME D [A-Z\s]+',  # Remove location references
             r'Service d\'urgence 24 h/24',
             r'Perte ou vol de vos cartes',
             r'Pour toute insatisfaction',
@@ -82,7 +82,7 @@ class BaseStatementParser(ABC):
             r'courrier à : Le médiateur CS 151',
             r'RELEVÉ DE COMPTE',
             r'COMPTE D\'ADMINISTRATION - en euros',
-            r'n° 30003 02846 00050034631 54',
+            r'n°\s*\d{5}\s+\d{5}\s+\d{11}\s+\d{2}',  # Remove account numbers
             r'du \d{2}/\d{2}/\d{4} au \d{2}/\d{2}/\d{4}',
             r'envoi n°\d+ Page \d+/\d+',
             r'Nature de l\'opération',

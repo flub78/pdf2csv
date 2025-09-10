@@ -205,8 +205,34 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Bank data protection - Real bank statements and sensitive data
 examples/releve_CM_07_2025.txt
 examples/releve_CM_07_2025.pdf
 examples/releve_CM_07_2025.csv
 examples/releve_CM_07_2025_SG.csv
 bank_statement_comparison.txt
+
+# Additional protection patterns for any real bank data
+**/releve_*.pdf
+**/statement_*.pdf
+**/bank_*.pdf
+**/compte_*.pdf
+**/releve_*.txt
+**/statement_*.txt
+**/bank_*.txt
+**/compte_*.txt
+
+# Generated CSV files that may contain real data
+**/releve_*.csv
+**/statement_*.csv
+**/bank_*.csv
+**/compte_*.csv
+
+# Exclude sample/test files from protection
+!**/sample_*.txt
+!**/sample_*.csv
+!**/test_*.txt
+!**/test_*.csv
+!**/example_*.txt
+!**/example_*.csv

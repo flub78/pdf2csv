@@ -1,0 +1,44 @@
+                                                                                                                                  RELEVÉ DE COMPTE
+                                                                                                        COMPTE D'ADMINISTRATION - en euros
+                                                                                                                                n° 12345 67890 00012345678 90
+VOS CONTACTS                                                                                                                        du 01/07/2025 au 31/07/2025
+                                                                                                                                           envoi n°7 Page 1/4
+Votre Banque à Distance
+Internet : entreprises.sg.fr
+
+Votre agence EXAMPLE BRANCH
+Téléphone : 03 XX XX XX XX                                                                    CLIENT ORGANIZATION NAME
+Courrier : XX RUE EXAMPLE                                                                     SECTION EXAMPLE
+           12345 EXAMPLE CITY                                                                  AERODROME D EXAMPLE LOCATION
+                                                                                              D 1001
+Service d'urgence 24 h/24                                                                     12345 EXAMPLE SAINT LOCATION
+Perte ou vol de vos cartes / chèques
+Téléphone : 09 69 39 77 77
+
+TP2
+
+
+
+
+RELEVÉ DES OPÉRATIONS
+    Date           Valeur                                   Nature de l'opération                                                   Débit                      Crédit
+                                                                               SOLDE PRÉCÉDENT AU 30/06/2025                                                       24.567,57
+ 01/07/2025 01/07/2025 000001 VIR EUROPEEN EMIS NET                                                                                        422,47
+                       POUR: CLIENT EXAMPLE XX
+                       REF: 1234567890123
+                       REMISE: Payment Example
+                       MOTIF: Transfer example via CM
+                       CHEZ: EXAMPLEPP
+                       LIB: 032025123456789000000 001 VI
+                                                                                                                                                                       24.145,10
+ 02/07/2025 01/07/2025 FACTURATION EXAMPLE SERVICE NET                                                                                       3,82
+                       REF ABONNEMENT MENSUEL
+                       TVA A 20,00 : 0,64 EUR
+                       MONTANT HT : 3,18 EUR
+                                                                                                                                                                       24.141,28
+
+TOTAUX DES MOUVEMENTS
+                                                          NOMBRE D'OPERATIONS                     DEBIT                            CREDIT
+                                                                        39                      3.456,25                        1.500,00
+
+                                                                            NOUVEAU SOLDE AU 31/07/2025                                                        22.185,32

@@ -160,7 +160,7 @@ class PDF2CSVConverter:
                 content = f.read()
             
             # Check for Société Générale patterns
-            if 'SG ABBEVILLE' in content or 'Société Générale' in content:
+            if 'SG ' in content or 'Société Générale' in content:
                 return SocieteGeneraleParser(str(txt_path))
             
             # Default to generic parser

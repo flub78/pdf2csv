@@ -47,23 +47,30 @@ class SocieteGeneraleParser(BaseStatementParser):
     
     def _extract_bank_info(self):
         """Extract bank information."""
-        self.statement.bank_name = "SG ABBEVILLE LEJEUNE"
+        # Extract bank name from header (generic pattern)
+        bank_match = re.search(r'SG\s+([A-Z\s]+)', self.raw_text)
+        if bank_match:
+            self.statement.bank_name = f"SG {bank_match.group(1).strip()}"
+        else:
+            self.statement.bank_name = "SG BANK BRANCH"
         
-        # Extract client info
+        # Extract client info - generic pattern for any client
         text = self.raw_text
-        client_match = re.search(r'(AERO CLUB D\'ABBEVILLE - BUIGNY[^)]+BUIGNY SAINT MACLOU)', text, re.MULTILINE | re.DOTALL)
+        client_match = re.search(r'([A-Z][A-Z\s\-\']+(?:SECTION [A-Z\s]+)?)\s*AERODROME', text, re.MULTILINE)
         if client_match:
             self.statement.client_name = client_match.group(1).replace('\n', ' ').strip()
     
     def _extract_account_info(self):
         """Extract account number and balance."""
-        # Extract account from "n° 30003 02846 00050034631 54"
+        # Extract account from "n° xxxxx xxxxx xxxxxxxxxxx xx" format
         account_match = re.search(r'n°\s*(\d+\s+\d+\s+\d+\s+\d+)', self.raw_text)
         if account_match:
-            account_parts = account_match.group(1).split()
-            # Format as IBAN: FR76 3000 3028 4600 0500 3463 154
-            if len(account_parts) >= 4:
-                self.statement.account_number = f"FR76 3000 3028 4600 0500 3463 154"
+            account_digits = account_match.group(1).replace(' ', '')
+            # Convert to IBAN format (FR76 + formatted account)
+            if len(account_digits) >= 20:  # Minimum French account format
+                # Format: FR76 + bank(4) + branch(5) + account(11) + key(2)
+                formatted = f"FR76 {account_digits[:4]} {account_digits[4:8]} {account_digits[8:12]} {account_digits[12:16]} {account_digits[16:20]} {account_digits[20:23] if len(account_digits) > 20 else '00'}"
+                self.statement.account_number = formatted
                 self.statement.bank_code = "CM"
         
         # Extract final balance

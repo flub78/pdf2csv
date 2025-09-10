@@ -37,6 +37,14 @@ This will create `bank_statement_january.txt` and `bank_statement_january.csv`.
 ./pdf2csv.py --version
 ```
 
+## Sample Data
+
+For testing purposes, you can use the provided sanitized examples:
+- `sample_statement.txt` - Example bank statement text (anonymized)
+- `sample_output.csv` - Expected CSV output format
+
+These files contain no real banking data and are safe for testing and development.
+
 ## Expected File Structure
 
 After running the script on `bank_statement.pdf`, you'll have:

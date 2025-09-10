@@ -1,0 +1,16 @@
+"SG EXAMPLE BRANCH"
+"FR76 1234 5678 9000 1234 5678 90";"CM"
+"CAV ADMI"
+"Solde au";"02/09/2025"
+"Solde";"22.185,32";"EUR"
+
+Date;Nature de l'opération;Débit;Crédit;Devise;Date de valeur;Libellé interbancaire
+"01/07/2025";"000001 VIR EUROPEEN EMIS NET";"-422,47";"";"EUR";"01/07/2025";"AUTRES VIREMENTS EMIS"
+"";"POUR: CLIENT EXAMPLE XX";"";"";"";"";""
+"";"REF: 1234567890123";"";"";"";"";""
+"";"REMISE: Payment Example";"";"";"";"";""
+"";"MOTIF: Transfer example via CM";"";"";"";"";""
+"02/07/2025";"FACTURATION EXAMPLE SERVICE NET";"-3,82";"";"EUR";"01/07/2025";"COMMISSIONS ET FRAIS DIVERS"
+"";"REF ABONNEMENT MENSUEL";"";"";"";"";""
+"";"TVA A 20,00 : 0,64 EUR";"";"";"";"";""
+"";"MONTANT HT : 3,18 EUR";"";"";"";"";""
