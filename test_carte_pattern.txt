@@ -1,0 +1,8 @@
+RELEVÉ DES OPÉRATIONS
+    Date           Valeur                                   Nature de l'opération                                                   Débit                      Crédit
+                                                                               SOLDE PRÉCÉDENT AU 25/02/2025                                                       1.000,00
+ 26/02/2025 26/02/2025 CARTE X7840 25/02 LA POSTE 800010                                                                                  15,50
+ 27/02/2025 27/02/2025 VIR INST RE 568578424597                                                                                                                      245,00
+                       DE: M.OU MME TRIBOULET PATRICK
+                       DATE: 27/02/2025 21:41
+                       REF: Vol Baie Somme/Triboulet

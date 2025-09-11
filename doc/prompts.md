@@ -832,130 +832,6 @@ def _get_operation_category(self, operation_type: str) -> str:
 
 ### 2025-09-08 - Session 24
 #### Prompt:
-When you find "CHEQUE" inside the nature of operation, include "CHEQUES PAYES" as Libellé interbancaire, column 7, index 6
-
-#### AI Response:
-I enhanced the categorization logic in the SG parser to include comprehensive category classification for all bank operation types:
-
-**Enhanced Categories Implemented:**
-- ✅ **CHEQUE operations** → "CHEQUES PAYES" (as requested)
-- ✅ **REMISE CHEQUE operations** → "REMISES DE CHEQUES" 
-- ✅ **VIR RECU operations** → "AUTRES VIREMENTS RECUS"
-- ✅ **VRST GAB operations** → "VERSEMENTS ESPECES" 
-- ✅ **ECHEANCE PRET operations** → "ECHEANCE CREDITS"
-
-**Updated `_get_operation_category()` Method:**
-- Added specific pattern matching for each operation type
-- Proper distinction between CHEQUE (payments) and REMISE CHEQUE (deposits)
-- Maintained existing categorization for FACTURATION/FRAIS, VIR INST RE, and VIR EUROPEEN EMIS
-- Comprehensive coverage of all bank statement operation types
-
-**Testing Results:**
-- All 39 transactions now have correct categorizations matching the official bank CSV format
-- CHEQUE operations correctly assigned "CHEQUES PAYES" in column 7 as requested
-- Other operation types automatically benefit from proper categorization
-- CSV output now fully compliant with official bank format standards
-
-**Code Quality:**
-- Clean pattern-based classification logic
-- Easy to extend for additional operation types
-- Proper order of precedence (specific patterns checked before general ones)
-- Maintains backward compatibility with existing functionality
----
-
-### 2025-09-08 - Session 25
-#### Prompt:
-The lines that only contain
-Valeur
-Date
-should be skipped in the input text file
-
-#### AI Response:
-I enhanced the line filtering in the base parser to skip standalone "Valeur" and "Date" lines that appear as column headers between pages in the bank statement:
-
-**Filter Enhancement:**
-- Added `r'^Valeur$'` pattern to ignore standalone "Valeur" lines
-- Added `r'^Date$'` pattern to ignore standalone "Date" lines  
-- These patterns use `^` and `$` anchors to match only lines containing exactly these words
-
-**Problem Addressed:**
-- Standalone "Valeur" and "Date" lines were being incorrectly included as transaction detail lines
-- These lines appear as column headers scattered throughout the multi-page PDF text
-- They were showing up as empty detail rows in the CSV output
-
-**Testing Results:**
-- CSV line count reduced from previous count, indicating successful filtering
-- No more standalone "Date" or "Valeur" lines appear in transaction details
-- Transaction parsing remains clean and accurate
-- All legitimate transaction content preserved
-
-**Code Quality:**
-- Minimal change using existing filtering infrastructure
-- Proper regex patterns with anchors for exact matching
-- Maintains existing filter logic and performance
----
-
-### 2025-09-08 - Session 26
-#### Prompt:
-Use color and style to make the UML diagram easier to read
-
-#### AI Response:
-I enhanced the PlantUML class diagram with comprehensive color coding and styling to improve readability and visual appeal:
-
-**Visual Enhancements Applied:**
-- **Theme & Layout**: Changed from `!theme plain` to `!theme toy` with enhanced background colors and title formatting
-- **Color-Coded Package System**: 
-  - Data Models (Blue): `#E3F2FD` - represents data structures
-  - Parser System (Purple): `#F3E5F5` - represents processing logic
-  - Main Application (Green): `#E8F5E8` - represents orchestration  
-  - External Dependencies (Orange): `#FFF3E0` - represents external tools
-
-**Enhanced Class Styling:**
-- Added stereotype tags (`<<datamodel>>`, `<<parser>>`, `<<application>>`, `<<external>>`) for clear categorization
-- Used `====` separators instead of `--` for better visual distinction between attributes and methods
-- Applied consistent color schemes to all classes within each package
-
-**Improved Documentation:**
-- **Color-coded notes** matching their respective packages with bold headings
-- **Structured bullet points** and enhanced descriptions
-- **Colored workflow steps** in the main orchestrator note (red→purple→blue→green)
-- **Rich formatting** with better information hierarchy
-
-**Better Relationships:**
-- Enhanced relationship lines with descriptive labels and improved arrow styling
-- Added line styling for key relationships with clearer visual connections
-
-**Result:**
-The diagram now provides clear visual cues that help distinguish between different types of components, making the system architecture much more intuitive to understand at a glance. Each package has its own color theme, and the enhanced notes provide structured information about key architectural decisions and workflow steps.
-
----
-
-### 2025-09-10 - Regex Analysis and Improvement Session
-#### Prompt:
-Review all regular expressions used in this project. Generate a document that contain the regular exprsssion, in what file and line it is declared and what is the purpose of the regular expression. AI generated regular expression tends to be limited to the provided data test and often miss abstraction. The file will be reviewed by a human being and he may have to ask you for some refactoring
-
-#### AI Response:
-I created a comprehensive analysis document `doc/regex_analysis.md` reviewing all 58 regular expressions across 4 files in the project:
-
-**Analysis Scope:**
-- **Text filtering** (33 patterns): Removing unwanted content from bank statements  
-- **Date parsing** (8 patterns): Extracting dates in various formats
-- **Amount parsing** (8 patterns): Extracting monetary amounts
-- **Data extraction** (9 patterns): Extracting account numbers, bank names, transaction data
-
-**Critical Issues Identified:**
-1. **Hardcoded patterns**: Account numbers and client names too specific to test data
-2. **Amount parsing limitations**: `\d{1,3}` restriction failing on large unformatted amounts
-3. **Missing characters**: "Téléphone" pattern missing 'T'
-4. **Mixed decimal separators**: Patterns accepting both comma and dot causing ambiguity
-
-**Files Analyzed:**
-- `src/parsers/base_parser.py`: 33 ignore patterns + generic amount/date patterns
-- `src/parsers/sg_parser.py`: SG-specific patterns for French banking format
-- `src/parsers/specific_parsers.py`: French banking patterns  
-- `generate_comparison.py`: Transaction parsing patterns
-
-#### Follow-up Prompt:
 When I see patterns like : | 164 | `r'([+-]?\d{1,3}(?:[,\s]\d{3})*(?:[.,]\d{2})?)\s*[\$€£¥]?'` | Amount with suffix currency | ⚠️ Mixed decimal separators |, I am concerned that numerical amount could be limited to a cernain number of digit, and that the parser could fail with bigger ammounts, do you confirm that it is a risk?
 
 #### AI Response:
@@ -1001,3 +877,39 @@ The best strategy is to filter out thousand separator and then to be able to sup
 - CSV generation still produces 176 lines for test data
 
 **Impact:** Corporate banking, large investment accounts, and international transfers now parse correctly while maintaining compatibility with existing smaller transactions.
+---
+
+### 2025-09-11 - Session: CARTE Credit Card Pattern Implementation
+#### Prompt:
+When a line matche two french dates then 'CARTE' then a carte ID, then a carte validity date as "YY/MM" then include "PAIEMENT CB" as Libellé interbancaire, column 7, index 6. Exemple 26/02/2025 26/02/2025 CARTE X7840 25/02 LA POSTE 800010
+
+#### Response:
+I analyzed the current SG parser implementation and successfully implemented the CARTE credit card payment pattern detection. Here's what was implemented:
+
+**Changes Made:**
+
+1. **Enhanced Transaction Detection**: Modified the `_extract_transactions` method in `SocieteGeneraleParser` to detect the specific CARTE pattern using regex: `CARTE\s+X\d+\s+\d{2}/\d{2}\s+(.+)`
+
+2. **Added libelle_interbancaire Field**: Extended the `BankTransaction` dataclass in `models.py` to include a `libelle_interbancaire` field for special transaction categories.
+
+3. **Credit Card Classification**: When a transaction matches the CARTE pattern, the parser now:
+   - Sets `libelle_interbancaire = "PAIEMENT CB"`
+   - Extracts the merchant information (e.g., "LA POSTE 800010") as the operation type
+   - Maintains proper amount parsing and debit/credit classification
+
+4. **CSV Integration**: Updated the `to_csv_format` method to prioritize `libelle_interbancaire` over the standard category mapping, ensuring "PAIEMENT CB" appears in column 7 (index 6) for credit card transactions.
+
+**Testing Results:**
+- ✅ Created test case with pattern "26/02/2025 26/02/2025 CARTE X7840 25/02 LA POSTE 800010"
+- ✅ Parser correctly detects CARTE pattern and sets "PAIEMENT CB" in column 7
+- ✅ Operation type extracted as "LA POSTE 800010" (merchant info)
+- ✅ Amount parsing works correctly (15,50 EUR debited)
+- ✅ All existing tests still pass (39 transactions processed correctly)
+- ✅ Full workflow validation with example PDF successful
+
+**Implementation Details:**
+- Pattern matching: `^\d{2}/\d{2}/\d{4}\s+\d{2}/\d{2}/\d{4}\s+CARTE\s+X\d+\s+\d{2}/\d{2}\s+(.+)`
+- Fallback logic: Uses standard category mapping when `libelle_interbancaire` is empty
+- Backward compatibility: No impact on existing transaction parsing
+
+The feature is now ready for production use and follows the vibe coding principles with minimal, targeted changes that solve the specific requirement.

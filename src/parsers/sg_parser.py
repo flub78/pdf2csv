@@ -115,19 +115,35 @@ class SocieteGeneraleParser(BaseStatementParser):
                 current_transaction.date = datetime.strptime(date_match.group(1), "%d/%m/%Y")
                 current_transaction.value_date = datetime.strptime(date_match.group(2), "%d/%m/%Y")
                 
+                # Check if this is a CARTE (credit card) transaction
+                remaining_text = date_match.group(3)
+                carte_match = re.match(r'CARTE\s+X\d+\s+\d{2}/\d{2}\s+(.+)', remaining_text)
+                if carte_match:
+                    # This is a credit card payment - set special category
+                    current_transaction.libelle_interbancaire = "PAIEMENT CB"
+                
                 # Extract operation type and amounts from this line and following lines
                 remaining_text = date_match.group(3)
                 
+                # Check if this is a CARTE (credit card) transaction
+                carte_match = re.match(r'CARTE\s+X\d+\s+\d{2}/\d{2}\s+(.+)', remaining_text)
+                if carte_match:
+                    # This is a credit card payment - set special category
+                    current_transaction.libelle_interbancaire = "PAIEMENT CB"
+                    # Keep the complete CARTE information in operation_type
+                    operation_text = remaining_text
+                else:
+                    operation_text = remaining_text
+                
                 # Extract amount from the operation text if present
                 amount_in_operation = None
-                operation_text = remaining_text
                 
                 # Look for amount pattern at the end of the operation text
-                amount_match = re.search(r'(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)\s*\*?\s*$', remaining_text)
+                amount_match = re.search(r'(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)\s*\*?\s*$', operation_text)
                 if amount_match:
                     amount_in_operation = self._parse_french_amount(amount_match.group(1))
                     # Remove the amount from the operation text
-                    operation_text = remaining_text[:amount_match.start()].strip()
+                    operation_text = operation_text[:amount_match.start()].strip()
                 
                 current_transaction.operation_type = self._clean_text(operation_text)
                 current_transaction.detail_lines = []
@@ -348,7 +364,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                 credit_str = formatted_amount
             
             # Main transaction row
-            category = self._get_operation_category(transaction.operation_type)
+            category = transaction.libelle_interbancaire or self._get_operation_category(transaction.operation_type)
             rows.append([
                 date_str,
                 transaction.operation_type or '',

@@ -24,6 +24,7 @@ class BankTransaction:
     balance: Optional[float] = None
     reference: str = ""
     category: str = ""
+    libelle_interbancaire: str = ""  # For special transaction categories like "PAIEMENT CB"
     
     def __str__(self) -> str:
         date_str = self.date.strftime("%Y-%m-%d") if self.date else "N/A"
