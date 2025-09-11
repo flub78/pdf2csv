@@ -1001,3 +1001,39 @@ The best strategy is to filter out thousand separator and then to be able to sup
 - CSV generation still produces 176 lines for test data
 
 **Impact:** Corporate banking, large investment accounts, and international transfers now parse correctly while maintaining compatibility with existing smaller transactions.
+
+---
+
+### 2025-09-10 - Session 17
+#### Prompt:
+Follow instructions in [specify.prompt.md](file:///home/frederic/git/pdf2csv/.github/prompts/specify.prompt.md).
+a pdf to csv convertor
+
+#### AI Response:
+I successfully followed the spec-driven development workflow to create a feature specification for the PDF to CSV converter:
+
+**Process Executed:**
+1. **Script Execution**: Ran `scripts/create-new-feature.sh --json "a pdf to csv convertor"` which created:
+   - New feature branch: `001-a-pdf-to`
+   - Spec file: `/home/frederic/git/pdf2csv/specs/001-a-pdf-to/spec.md`
+   - Feature number: 001
+
+2. **Template Application**: Loaded the spec template from `templates/spec-template.md` and populated it with concrete details for the PDF to CSV converter feature
+
+3. **Specification Creation**: Generated comprehensive specification including:
+   - **Primary User Story**: Users converting PDF files with structured data to CSV format for spreadsheet/database use
+   - **Acceptance Scenarios**: 4 scenarios covering normal conversion, multiple tables, error handling, and no-data cases
+   - **Edge Cases**: Password protection, image handling, complex formatting, special characters
+   - **Functional Requirements**: 12 requirements (FR-001 to FR-012) with 8 marked as [NEEDS CLARIFICATION]
+   - **Key Entities**: PDF File, CSV File, Data Table, Conversion Job
+
+**Clarifications Needed:**
+The specification identifies several areas requiring stakeholder input:
+- File size limits and PDF version support
+- Types of PDFs to process (forms, reports, statements, invoices)
+- Text vs image/scanned content extraction capabilities
+- CSV format specifications (delimiters, encoding, headers)
+- Single vs multiple table handling
+- User interaction level (batch, GUI, command line)
+
+**Status**: Feature specification is ready for planning phase after the marked clarifications are resolved. The spec follows business stakeholder focus without implementation details and provides testable requirements framework.
