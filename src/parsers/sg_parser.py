@@ -153,7 +153,7 @@ class SocieteGeneraleParser(BaseStatementParser):
                     # Determine if this is debit or credit based on operation type
                     operation_upper = operation_text.upper()
                     is_credit_operation = any(keyword in operation_upper for keyword in [
-                        'VIR INST RE', 'VIR RECU', 'REMISE', 'DEPOT', 'VRST GAB'
+                        'VIR INST RE', 'VIR RECU', 'REMISE', 'DEPOT', 'VRST GAB', 'VIREMENT RECU'
                     ])
                     
                     if is_credit_operation:
