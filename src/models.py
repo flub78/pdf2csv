@@ -60,6 +60,7 @@ class BankStatement:
     account_number: str = ""
     account_holder: str = ""
     client_name: str = ""
+    client_section: str = ""  # Client section (e.g., "SECTION VOL MOTEUR")
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     opening_balance: Optional[float] = None

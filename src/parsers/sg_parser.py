@@ -54,11 +54,23 @@ class SocieteGeneraleParser(BaseStatementParser):
         else:
             self.statement.bank_name = "SG BANK BRANCH"
         
-        # Extract client info - generic pattern for any client
+        # Extract client info - look for client name and section separately
         text = self.raw_text
-        client_match = re.search(r'([A-Z][A-Z\s\-\']+(?:SECTION [A-Z\s]+)?)\s*AERODROME', text, re.MULTILINE)
+        # Find AERO CLUB name
+        client_match = re.search(r'(AERO CLUB[^\n]+)', text)
         if client_match:
-            self.statement.client_name = client_match.group(1).replace('\n', ' ').strip()
+            self.statement.client_name = client_match.group(1).strip()
+        
+        # Find SECTION line
+        section_match = re.search(r'(SECTION [A-Z\s]+?)(?:\n|$)', text)
+        if section_match:
+            self.statement.client_section = section_match.group(1).strip()
+        
+        # Fallback if AERO CLUB not found
+        if not client_match:
+            client_match = re.search(r'([A-Z][A-Z\s\-\']+)\s*AERODROME', text, re.MULTILINE)
+            if client_match:
+                self.statement.client_name = client_match.group(1).replace('\n', ' ').strip()
     
     def _extract_account_info(self):
         """Extract account number and balance."""
@@ -68,18 +80,17 @@ class SocieteGeneraleParser(BaseStatementParser):
             account_digits = account_match.group(1).replace(' ', '')
             # Convert to IBAN format (FR76 + formatted account)
             if len(account_digits) >= 20:  # Minimum French account format
-                # Format: FR76 + bank(4) + branch(5) + account(11) + key(2)
+                # Format: FR76 + bank(5) + branch(5) + account(11) + key(2)
+                # Extract bank code from first 5 digits
+                bank_code = account_digits[:5]
                 formatted = f"FR76 {account_digits[:4]} {account_digits[4:8]} {account_digits[8:12]} {account_digits[12:16]} {account_digits[16:20]} {account_digits[20:23] if len(account_digits) > 20 else '00'}"
                 self.statement.account_number = formatted
-                self.statement.bank_code = "CM"
+                self.statement.bank_code = bank_code
         
         # Extract final balance
-        balance_match = re.search(r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)', self.raw_text)
+        balance_match = re.search(r'NOUVEAU SOLDE AU \d{2}/\d{2}/\d{4}\s+[+\-]?\s*(\d{1,3}(?:\.\d{3})+(?:,\d{2})?|\d{4,}(?:,\d{2})?|\d{1,3}(?:,\d{2})?)', self.raw_text)
         if balance_match:
             self.statement.final_balance = self._parse_french_amount(balance_match.group(1))
-        else:
-            # Default balance if not found
-            self.statement.final_balance = 117767.32
     
     def _extract_period(self):
         """Extract statement period."""
@@ -328,14 +339,23 @@ class SocieteGeneraleParser(BaseStatementParser):
         
         # Header rows - exact format from example
         rows.append([f'{self.statement.bank_name}'])
-        rows.append([f'{self.statement.account_number}', f'{self.statement.bank_code}'])
+        # Concatenate client_name and client_section for column 2 if both exist
+        client_info = self.statement.client_name
+        if self.statement.client_section:
+            client_info = f"{self.statement.client_name} {self.statement.client_section}"
+        rows.append([f'{self.statement.account_number}', f'{self.statement.bank_code}', client_info])
         rows.append(['CAV ADMI'])
         
-        # Use specific date from example
-        rows.append(['Solde au', '02/09/2025'])
+        # Use extracted date
+        end_date_str = self.statement.end_date.strftime('%d/%m/%Y') if self.statement.end_date else ''
+        rows.append(['Solde au', end_date_str])
         
-        # Use specific balance from example
-        rows.append(['Solde', '117 767,32', 'EUR'])
+        # Use extracted balance with French formatting
+        balance_value = self.statement.closing_balance if self.statement.closing_balance is not None else self.statement.final_balance
+        balance_str = ''
+        if balance_value is not None:
+            balance_str = f"{balance_value:,.2f}".replace(',', ' ').replace('.', ',')
+        rows.append(['Solde', balance_str, 'EUR'])
         
         # Empty line 6 to comply with bank format
         rows.append([])
